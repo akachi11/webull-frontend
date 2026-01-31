@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { TrendingUp, TrendingDown, Search, Menu, X, LogOut, User, Bell, DollarSign, Activity, Eye, EyeOff } from 'lucide-react';
+import { TrendingUp, TrendingDown, Activity, Eye, EyeOff } from 'lucide-react';
 import axios from 'axios';
-import logo from "../assets/logo.png"
 import Navbar from '../components/Navbar';
 import PopularStocks from '../components/PopularStocks';
 
@@ -42,13 +41,15 @@ export default function Dashboard() {
     const [totalValue, setTotalValue] = useState(0);
     const [totalChange, setTotalChange] = useState(0);
     const [totalChangePercent, setTotalChangePercent] = useState(0);
-    const [searchQuery, setSearchQuery] = useState('');
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    // const [searchQuery, setSearchQuery] = useState('');
+    // const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isBalanceHidden, setIsBalanceHidden] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [popularStocks, setPopularStocks] = useState<Stock[]>([]);
     const [popularStocksLoading, setPopularStocksLoading] = useState(true);
     const [cash, setCash] = useState(0);
+
+    console.log(user)
 
     useEffect(() => {
         fetchUserData();
@@ -149,18 +150,18 @@ export default function Dashboard() {
         navigate(`/trade/${symbol}`);
     };
 
-    const handleSearch = (e?: React.FormEvent) => {
-        e?.preventDefault();
-        if (searchQuery.trim()) {
-            navigate(`/trade/${searchQuery.toUpperCase()}`);
-        }
-    };
+    // const handleSearch = (e?: React.FormEvent) => {
+    //     e?.preventDefault();
+    //     if (searchQuery.trim()) {
+    //         navigate(`/trade/${searchQuery.toUpperCase()}`);
+    //     }
+    // };
 
-    const handleLogout = () => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        navigate('/signin');
-    };
+    // const handleLogout = () => {
+    //     localStorage.removeItem('token');
+    //     localStorage.removeItem('user');
+    //     navigate('/signin');
+    // };
 
     const formatCurrency = (value: number): string => {
         return new Intl.NumberFormat('en-US', {

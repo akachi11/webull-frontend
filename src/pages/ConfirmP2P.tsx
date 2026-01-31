@@ -96,7 +96,7 @@ export default function P2PTradeConfirmationPage() {
             try {
                 const isUserBuyer = trade.userIsBuyer;
                 const recipientEmail = isUserBuyer ? data.sellerEmail : data.buyerEmail;
-                const recipientName = isUserBuyer ? data.sellerName : data.buyerName;
+                // const recipientName = isUserBuyer ? data.sellerName : data.buyerName;
 
                 await sendP2PTradeStatusEmail(
                     recipientEmail,

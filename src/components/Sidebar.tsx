@@ -4,7 +4,7 @@ import { useApp } from '../contexts/AppContext';
 
 export default function Sidebar() {
     const navigate = useNavigate();
-    const { user, isSidebarOpen, setIsSidebarOpen } = useApp();
+    const { isSidebarOpen, setIsSidebarOpen } = useApp();
 
     const handleLogout = () => {
         localStorage.removeItem('token');
