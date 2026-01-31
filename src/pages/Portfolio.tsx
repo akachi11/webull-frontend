@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { TrendingUp, TrendingDown, Activity, Clock, DollarSign, PieChart, BarChart3, ArrowUpRight, ArrowDownRight, Search } from 'lucide-react';
+import { TrendingUp, TrendingDown, Activity, Clock, DollarSign, PieChart, ArrowUpRight, ArrowDownRight, Search } from 'lucide-react';
 import Navbar from '../components/Navbar';
-
-const API_BASE_URL = 'http://localhost:5000/api';
+import { API_BASE_URL } from '../utils';
 
 interface PortfolioStock {
     symbol: string;
@@ -362,8 +361,8 @@ export default function Portfolio() {
                                     <button
                                         onClick={() => setFilterType('ALL')}
                                         className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-medium transition ${filterType === 'ALL'
-                                                ? 'bg-emerald-500 text-white'
-                                                : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+                                            ? 'bg-emerald-500 text-white'
+                                            : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
                                             }`}
                                     >
                                         All
@@ -371,8 +370,8 @@ export default function Portfolio() {
                                     <button
                                         onClick={() => setFilterType('BUY')}
                                         className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-medium transition ${filterType === 'BUY'
-                                                ? 'bg-emerald-500 text-white'
-                                                : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+                                            ? 'bg-emerald-500 text-white'
+                                            : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
                                             }`}
                                     >
                                         Buy
@@ -380,8 +379,8 @@ export default function Portfolio() {
                                     <button
                                         onClick={() => setFilterType('SELL')}
                                         className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-medium transition ${filterType === 'SELL'
-                                                ? 'bg-emerald-500 text-white'
-                                                : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+                                            ? 'bg-emerald-500 text-white'
+                                            : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
                                             }`}
                                     >
                                         Sell
@@ -427,8 +426,8 @@ export default function Portfolio() {
                                     >
                                         <div className="flex items-center gap-3 sm:gap-4">
                                             <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${transaction.type === 'BUY'
-                                                    ? 'bg-emerald-500/20 text-emerald-400'
-                                                    : 'bg-red-500/20 text-red-400'
+                                                ? 'bg-emerald-500/20 text-emerald-400'
+                                                : 'bg-red-500/20 text-red-400'
                                                 }`}>
                                                 {transaction.type === 'BUY' ? <TrendingUp size={20} /> : <TrendingDown size={20} />}
                                             </div>

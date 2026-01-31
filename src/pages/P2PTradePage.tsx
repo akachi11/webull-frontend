@@ -3,8 +3,7 @@ import { ArrowLeft, Shield, BadgeCheck, Star, AlertCircle, Copy, Check, X, Flag,
 import { useParams } from 'react-router-dom';
 import { useApp } from '../contexts/AppContext';
 import { sendP2PTradeStatusEmail } from '../utils/emailService';
-
-const API_BASE_URL = 'http://localhost:5000/api';
+import { API_BASE_URL } from '../utils';
 
 interface Trader {
     username: string;

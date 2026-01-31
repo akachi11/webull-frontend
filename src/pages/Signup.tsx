@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import logo from "../assets/logo.png"
 import { sendVerificationEmail } from '../utils/sendVerificationEmail';
+import { API_BASE_URL } from '../utils';
 
 interface FormData {
     firstName: string;
@@ -119,7 +120,7 @@ export default function SignUp() {
         setErrors(prev => ({ ...prev, api: undefined }));
 
         try {
-            const response = await fetch('http://localhost:5000/api/auth/signup', {
+            const response = await fetch(`${API_BASE_URL}/auth/signup`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

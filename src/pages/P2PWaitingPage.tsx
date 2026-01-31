@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { ArrowLeft, Shield, BadgeCheck, Clock, AlertCircle, Flag, Ban, CheckCircle, Wallet, X, XCircle } from 'lucide-react';
-
-const API_BASE_URL = 'http://localhost:5000/api';
+import { API_BASE_URL } from '../utils';
 
 export default function P2PPendingTradePage() {
     const [trade, setTrade] = useState<any | null>(null);

@@ -4,8 +4,8 @@ import { TrendingUp, TrendingDown, ArrowLeft, Users, Globe, Building2, Calendar,
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import logo from "../assets/logo.png"
 import { useApp } from '../contexts/AppContext';
+import { API_BASE_URL } from '../utils';
 
-const API_BASE_URL = 'http://localhost:5000/api';
 const MINIMUM_TRADE_AMOUNT = 5000;
 
 interface StockDetails {

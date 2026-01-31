@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { sendVerificationEmail } from '../utils/sendVerificationEmail';
+import { API_BASE_URL } from '../utils';
 
 export function VerifyEmail() {
     const navigate = useNavigate();
@@ -76,7 +77,7 @@ export function VerifyEmail() {
         setError('');
 
         try {
-            const response = await fetch('http://localhost:5000/api/auth/verify-email', {
+            const response = await fetch(`${API_BASE_URL}/auth/verify-email`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, code })
@@ -107,7 +108,7 @@ export function VerifyEmail() {
 
         try {
             const response = await fetch(
-                'http://localhost:5000/api/auth/resend-verification',
+                `${API_BASE_URL}/auth/resend-verification`,
                 {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },

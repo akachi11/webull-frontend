@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Shield, CheckCircle, AlertCircle, Loader } from 'lucide-react';
 import { sendP2PTradeStatusEmail } from '../utils/emailService';
-
-const API_BASE_URL = 'http://localhost:5000/api';
+import { API_BASE_URL } from '../utils';
 
 export default function P2PTradeConfirmationPage() {
     const { tradeId } = useParams();

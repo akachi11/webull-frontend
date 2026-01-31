@@ -4,9 +4,9 @@ import { TrendingUp, TrendingDown, Activity, Eye, EyeOff } from 'lucide-react';
 import axios from 'axios';
 import Navbar from '../components/Navbar';
 import PopularStocks from '../components/PopularStocks';
+import { API_BASE_URL } from '../utils';
 
 // API Base URL
-const API_BASE_URL = 'http://localhost:5000/api';
 
 interface Stock {
     symbol: string;

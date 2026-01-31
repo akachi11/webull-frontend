@@ -3,8 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { TrendingUp, TrendingDown, Activity } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import PopularStocks from '../components/PopularStocks';
-
-const API_BASE_URL = 'http://localhost:5000/api';
+import { API_BASE_URL } from '../utils';
 
 interface PortfolioStock {
     symbol: string;

@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, Mail, Calendar, Shield, Edit2, Save, X, Camera, DollarSign } from 'lucide-react';
 import Navbar from '../components/Navbar';
-
-const API_BASE_URL = 'http://localhost:5000/api';
+import { API_BASE_URL } from '../utils';
 
 interface UserData {
     firstName: string;
