@@ -1,0 +1,1 @@
+export { sendVerificationEmail, sendP2PTradeStatusEmail } from './emailService';
