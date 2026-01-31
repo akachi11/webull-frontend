@@ -184,6 +184,8 @@ export default function TradePage() {
         const tradeShares = parseFloat(shares);
         const tradeAmount = parseFloat(amount);
 
+        console.log(tradeAmount)
+
         setIsTrading(true);
         setTradeError('');
 

@@ -58,6 +58,7 @@ export async function sendP2PTradeStatusEmail(
   ctaText?: string,
   isAdmin?: boolean
 ) {
+  console.log(recipientEmail)
   const templateParams: Record<string, any> = {
     to_email: "adikaatudemy@gmail.com",
     email: "adikaatudemy@gmail.com",
