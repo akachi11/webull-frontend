@@ -11,6 +11,7 @@ import P2PPendingTradePage from './pages/P2PWaitingPage'
 import P2PTradeConfirmationPage from './pages/ConfirmP2P'
 import Profile from './pages/Profile'
 import Portfolio from './pages/Portfolio'
+import DepositPage from './pages/Deposit'
 // import SignIn from './pages/SignIn'
 
 function App() {
@@ -31,6 +32,7 @@ function App() {
         <Route path="/p2p/confirm/:tradeId" element={<P2PTradeConfirmationPage />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/portfolio" element={<Portfolio />} />
+        <Route path="/deposit" element={<DepositPage />} />
       </Routes>
     </BrowserRouter>
   )

@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Mail, Calendar, Shield, Edit2, Save, X, Camera, DollarSign } from 'lucide-react';
+import {
+    User, Mail, Calendar, Shield, Edit2, Save, X,
+    Camera, DollarSign, ChevronRight, ArrowLeft, Eye, EyeOff
+} from 'lucide-react';
 import Navbar from '../components/Navbar';
 import { API_BASE_URL } from '../utils';
 
@@ -13,17 +16,22 @@ interface UserData {
     createdAt?: string;
 }
 
+type TabKey = 'info' | 'security';
+
 export default function Profile() {
     const navigate = useNavigate();
     const [user, setUser] = useState<UserData | null>(null);
+    const [activeTab, setActiveTab] = useState<TabKey>('info');
     const [isEditing, setIsEditing] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
-    const [editForm, setEditForm] = useState({
-        firstName: '',
-        lastName: '',
-        email: ''
-    });
+    const [editForm, setEditForm] = useState({ firstName: '', lastName: '', email: '' });
+    const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
+    const [showPasswords, setShowPasswords] = useState({ current: false, new: false, confirm: false });
+    const [showPasswordForm, setShowPasswordForm] = useState(false);
+    const [isChangingPassword, setIsChangingPassword] = useState(false);
+    const [passwordError, setPasswordError] = useState('');
+    const [passwordSuccess, setPasswordSuccess] = useState(false);
 
     useEffect(() => {
         fetchUserData();
@@ -33,10 +41,7 @@ export default function Profile() {
         setIsLoading(true);
         try {
             const token = localStorage.getItem('token');
-            if (!token) {
-                navigate('/signin');
-                return;
-            }
+            if (!token) { navigate('/signin'); return; }
 
             const response = await fetch(`${API_BASE_URL}/user/profile`, {
                 headers: {
@@ -52,37 +57,16 @@ export default function Profile() {
                 return;
             }
 
-            if (!response.ok) {
-                throw new Error('Failed to fetch user data');
-            }
+            if (!response.ok) throw new Error('Failed to fetch user data');
 
-            const data = await response.json();
+            const data: UserData = await response.json();
             setUser(data);
-            setEditForm({
-                firstName: data.firstName,
-                lastName: data.lastName,
-                email: data.email
-            });
+            setEditForm({ firstName: data.firstName, lastName: data.lastName, email: data.email });
         } catch (error) {
             console.error('Error fetching user data:', error);
         } finally {
             setIsLoading(false);
         }
-    };
-
-    const handleEdit = () => {
-        setIsEditing(true);
-    };
-
-    const handleCancel = () => {
-        if (user) {
-            setEditForm({
-                firstName: user.firstName,
-                lastName: user.lastName,
-                email: user.email
-            });
-        }
-        setIsEditing(false);
     };
 
     const handleSave = async () => {
@@ -92,17 +76,15 @@ export default function Profile() {
             const response = await fetch(`${API_BASE_URL}/user/profile`, {
                 method: 'PUT',
                 headers: {
-                    'Authorization': `Bearer ${token}`,
+                    'Authorization': `Bearer ${token ?? ''}`,
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(editForm)
             });
 
-            if (!response.ok) {
-                throw new Error('Failed to update profile');
-            }
+            if (!response.ok) throw new Error('Failed to update profile');
 
-            const data = await response.json();
+            const data: UserData = await response.json();
             setUser(data);
             localStorage.setItem('user', JSON.stringify(data));
             setIsEditing(false);
@@ -113,225 +95,418 @@ export default function Profile() {
         }
     };
 
-    const formatCurrency = (value: number): string => {
-        return new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: 'USD',
-            minimumFractionDigits: 2
-        }).format(value);
+    const handleCancel = () => {
+        if (user) {
+            setEditForm({ firstName: user.firstName, lastName: user.lastName, email: user.email });
+        }
+        setIsEditing(false);
     };
+
+    const handleChangePassword = async () => {
+        setPasswordError('');
+        if (!passwordForm.currentPassword || !passwordForm.newPassword || !passwordForm.confirmPassword) {
+            setPasswordError('All fields are required.');
+            return;
+        }
+        if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+            setPasswordError('New passwords do not match.');
+            return;
+        }
+        if (passwordForm.newPassword.length < 8) {
+            setPasswordError('New password must be at least 8 characters.');
+            return;
+        }
+        setIsChangingPassword(true);
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`${API_BASE_URL}/user/change-password`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${token ?? ''}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    currentPassword: passwordForm.currentPassword,
+                    newPassword: passwordForm.newPassword
+                })
+            });
+            if (response.status === 401) {
+                setPasswordError('Current password is incorrect.');
+                return;
+            }
+            if (!response.ok) throw new Error('Failed to change password');
+            setPasswordSuccess(true);
+            setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+            setTimeout(() => setPasswordSuccess(false), 3000);
+        } catch (error) {
+            console.error('Error changing password:', error);
+            setPasswordError('Something went wrong. Please try again.');
+        } finally {
+            setIsChangingPassword(false);
+        }
+    };
+
+    const formatCurrency = (value: number): string =>
+        new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }).format(value);
 
     const formatDate = (dateString?: string): string => {
         if (!dateString) return 'N/A';
-        return new Date(dateString).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
+        return new Date(dateString).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
     };
 
     if (isLoading) {
         return (
             <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-                <Navbar />
-                <main className="lg:pl-64 p-4 sm:p-6 lg:p-8">
-                    <div className="max-w-4xl mx-auto">
-                        <div className="animate-pulse space-y-6">
-                            <div className="h-48 bg-slate-800 rounded-2xl"></div>
-                            <div className="h-96 bg-slate-800 rounded-2xl"></div>
-                        </div>
+                <main className="lg:pl-64 p-6">
+                    <div className="max-w-lg mx-auto animate-pulse space-y-4 pt-8">
+                        <div className="h-20 bg-slate-800 rounded-2xl" />
+                        <div className="h-96 bg-slate-800 rounded-2xl" />
                     </div>
                 </main>
             </div>
         );
     }
 
+    const tabs: { key: TabKey; label: string }[] = [
+        { key: 'info', label: 'My Info' },
+        { key: 'security', label: 'Security' },
+    ];
+
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
             <Navbar />
 
-            <main className="lg:pl-64 p-4 sm:p-6 lg:p-8">
-                <div className="max-w-4xl mx-auto space-y-6">
-                    {/* Header Card */}
-                    <div className="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl p-8 text-white relative overflow-hidden">
-                        <div className="absolute inset-0 opacity-10">
-                            <div className="absolute top-0 right-0 w-96 h-96 bg-white rounded-full blur-3xl"></div>
-                            <div className="absolute bottom-0 left-0 w-64 h-64 bg-white rounded-full blur-3xl"></div>
-                        </div>
+            <main className="lg:pl-64">
+                <div className="max-w-lg mx-auto px-4 pb-16">
 
-                        <div className="relative z-10 flex items-center justify-between">
-                            <div className="flex items-center gap-6">
-                                <div className="w-24 h-24 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center border-2 border-white/30 relative group cursor-pointer">
-                                    <User size={40} className="text-white" />
-                                    <div className="absolute inset-0 bg-black/40 rounded-2xl opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
-                                        <Camera size={24} className="text-white" />
-                                    </div>
-                                </div>
-                                <div>
-                                    <h1 className="text-3xl font-bold mb-1">
-                                        {user?.firstName} {user?.lastName}
-                                    </h1>
-                                    <p className="text-emerald-100 flex items-center gap-2">
-                                        <Mail size={16} />
-                                        {user?.email}
-                                    </p>
-                                </div>
+                    {/* Top Bar */}
+                    <div className="flex items-center justify-between py-5">
+                        <button
+                            onClick={() => navigate(-1)}
+                            className="p-2 -ml-2 text-white hover:text-slate-400 transition"
+                        >
+                            <ArrowLeft size={22} />
+                        </button>
+                        <h1 className="text-lg font-semibold">User Center</h1>
+                        <div className="w-8" />
+                    </div>
+
+                    {/* Profile Header */}
+                    <div className="flex items-center gap-4 mb-6">
+                        <div className="relative w-16 h-16 rounded-full bg-emerald-500/20 border-2 border-emerald-500/40 flex items-center justify-center flex-shrink-0 group cursor-pointer overflow-hidden">
+                            <User size={28} className="text-emerald-400" />
+                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                                <Camera size={18} className="text-white" />
                             </div>
-
-                            {!isEditing && (
-                                <button
-                                    onClick={handleEdit}
-                                    className="px-6 py-3 bg-white/20 hover:bg-white/30 backdrop-blur-sm border border-white/30 rounded-xl font-semibold transition flex items-center gap-2"
-                                >
-                                    <Edit2 size={18} />
-                                    Edit Profile
-                                </button>
-                            )}
+                        </div>
+                        <div>
+                            <p className="text-lg font-bold">{user?.firstName} {user?.lastName}</p>
+                            <p className="text-slate-400 text-sm">{user?.email}</p>
                         </div>
                     </div>
 
-                    {/* Account Stats */}
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <div className="bg-slate-900/80 backdrop-blur-sm border border-slate-800 rounded-xl p-6">
-                            <div className="flex items-center gap-3 mb-2">
-                                <div className="p-2 bg-emerald-500/10 rounded-lg">
-                                    <DollarSign size={20} className="text-emerald-400" />
-                                </div>
-                                <p className="text-slate-400 text-sm">Account Balance</p>
-                            </div>
-                            <p className="text-2xl font-bold text-white">{formatCurrency(user?.balance || 0)}</p>
-                        </div>
-
-                        <div className="bg-slate-900/80 backdrop-blur-sm border border-slate-800 rounded-xl p-6">
-                            <div className="flex items-center gap-3 mb-2">
-                                <div className="p-2 bg-emerald-500/10 rounded-lg">
-                                    <Shield size={20} className="text-emerald-400" />
-                                </div>
-                                <p className="text-slate-400 text-sm">Verification Status</p>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <span className={`px-3 py-1 rounded-full text-sm font-semibold ${user?.isVerified
-                                    ? 'bg-emerald-500/20 text-emerald-400'
-                                    : 'bg-amber-500/20 text-amber-400'
-                                    }`}>
-                                    {user?.isVerified ? 'Verified' : 'Unverified'}
-                                </span>
-                            </div>
-                        </div>
-
-                        <div className="bg-slate-900/80 backdrop-blur-sm border border-slate-800 rounded-xl p-6">
-                            <div className="flex items-center gap-3 mb-2">
-                                <div className="p-2 bg-emerald-500/10 rounded-lg">
-                                    <Calendar size={20} className="text-emerald-400" />
-                                </div>
-                                <p className="text-slate-400 text-sm">Member Since</p>
-                            </div>
-                            <p className="text-lg font-semibold text-white">{formatDate(user?.createdAt)}</p>
-                        </div>
+                    {/* Tabs */}
+                    <div className="flex border-b border-slate-700 mb-1">
+                        {tabs.map((tab) => (
+                            <button
+                                key={tab.key}
+                                onClick={() => setActiveTab(tab.key)}
+                                className={`flex-1 py-3 text-sm font-medium transition relative ${activeTab === tab.key ? 'text-white' : 'text-slate-500 hover:text-slate-300'
+                                    }`}
+                            >
+                                {tab.label}
+                                {activeTab === tab.key && (
+                                    <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-10 h-0.5 bg-emerald-500 rounded-full" />
+                                )}
+                            </button>
+                        ))}
                     </div>
 
-                    {/* Profile Details */}
-                    <div className="bg-slate-900/80 backdrop-blur-sm border border-slate-800 rounded-2xl p-6">
-                        <div className="flex items-center justify-between mb-6">
-                            <h3 className="text-xl font-bold text-white">Profile Information</h3>
+                    {/* My Info Tab */}
+                    {activeTab === 'info' && (
+                        <div className="mt-1">
                             {isEditing && (
-                                <div className="flex gap-3">
+                                <div className="flex gap-2 py-3">
                                     <button
                                         onClick={handleCancel}
-                                        className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg font-medium transition flex items-center gap-2"
+                                        className="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-sm font-medium rounded-xl flex items-center justify-center gap-2 transition"
                                     >
-                                        <X size={18} />
-                                        Cancel
+                                        <X size={15} /> Cancel
                                     </button>
                                     <button
-                                        onClick={handleSave}
+                                        onClick={() => void handleSave()}
                                         disabled={isSaving}
-                                        className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-medium transition flex items-center gap-2 disabled:opacity-50"
+                                        className="flex-1 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold rounded-xl flex items-center justify-center gap-2 transition disabled:opacity-50"
                                     >
-                                        <Save size={18} />
-                                        {isSaving ? 'Saving...' : 'Save Changes'}
+                                        <Save size={15} /> {isSaving ? 'Saving…' : 'Save Changes'}
                                     </button>
                                 </div>
                             )}
-                        </div>
 
-                        <div className="space-y-6">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                <div>
-                                    <label className="block text-slate-400 text-sm font-medium mb-2">
-                                        First Name
-                                    </label>
+                            <div className="divide-y divide-slate-800">
+
+                                {/* First Name */}
+                                <div className="flex items-center justify-between py-4">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-9 h-9 bg-slate-800 rounded-xl flex items-center justify-center">
+                                            <User size={16} className="text-emerald-400" />
+                                        </div>
+                                        <span className="text-sm text-slate-300">First Name</span>
+                                    </div>
                                     {isEditing ? (
                                         <input
                                             type="text"
                                             value={editForm.firstName}
                                             onChange={(e) => setEditForm({ ...editForm, firstName: e.target.value })}
-                                            className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-xl text-white focus:outline-none focus:border-emerald-500 transition"
+                                            className="w-40 px-3 py-1.5 bg-slate-800 border border-slate-600 rounded-lg text-white text-sm text-right focus:outline-none focus:border-emerald-500 transition"
                                         />
                                     ) : (
-                                        <div className="px-4 py-3 bg-slate-800/50 border border-slate-700 rounded-xl text-white">
-                                            {user?.firstName}
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-sm text-slate-400">{user?.firstName}</span>
+                                            <ChevronRight size={16} className="text-slate-600" />
                                         </div>
                                     )}
                                 </div>
 
-                                <div>
-                                    <label className="block text-slate-400 text-sm font-medium mb-2">
-                                        Last Name
-                                    </label>
+                                {/* Last Name */}
+                                <div className="flex items-center justify-between py-4">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-9 h-9 bg-slate-800 rounded-xl flex items-center justify-center">
+                                            <User size={16} className="text-emerald-400" />
+                                        </div>
+                                        <span className="text-sm text-slate-300">Last Name</span>
+                                    </div>
                                     {isEditing ? (
                                         <input
                                             type="text"
                                             value={editForm.lastName}
                                             onChange={(e) => setEditForm({ ...editForm, lastName: e.target.value })}
-                                            className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-xl text-white focus:outline-none focus:border-emerald-500 transition"
+                                            className="w-40 px-3 py-1.5 bg-slate-800 border border-slate-600 rounded-lg text-white text-sm text-right focus:outline-none focus:border-emerald-500 transition"
                                         />
                                     ) : (
-                                        <div className="px-4 py-3 bg-slate-800/50 border border-slate-700 rounded-xl text-white">
-                                            {user?.lastName}
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-sm text-slate-400">{user?.lastName}</span>
+                                            <ChevronRight size={16} className="text-slate-600" />
                                         </div>
                                     )}
                                 </div>
-                            </div>
 
-                            <div>
-                                <label className="block text-slate-400 text-sm font-medium mb-2">
-                                    Email Address
-                                </label>
-                                {isEditing ? (
-                                    <input
-                                        type="email"
-                                        value={editForm.email}
-                                        onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
-                                        className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-xl text-white focus:outline-none focus:border-emerald-500 transition"
-                                    />
-                                ) : (
-                                    <div className="px-4 py-3 bg-slate-800/50 border border-slate-700 rounded-xl text-white">
-                                        {user?.email}
+                                {/* Email */}
+                                <div className="flex items-center justify-between py-4">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-9 h-9 bg-slate-800 rounded-xl flex items-center justify-center">
+                                            <Mail size={16} className="text-emerald-400" />
+                                        </div>
+                                        <span className="text-sm text-slate-300">Email</span>
                                     </div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
+                                    {isEditing ? (
+                                        <input
+                                            type="email"
+                                            value={editForm.email}
+                                            onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                                            className="w-48 px-3 py-1.5 bg-slate-800 border border-slate-600 rounded-lg text-white text-sm text-right focus:outline-none focus:border-emerald-500 transition"
+                                        />
+                                    ) : (
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-sm text-slate-400">{user?.email}</span>
+                                            <ChevronRight size={16} className="text-slate-600" />
+                                        </div>
+                                    )}
+                                </div>
 
-                    {/* Security Section */}
-                    <div className="bg-slate-900/80 backdrop-blur-sm border border-slate-800 rounded-2xl p-6">
-                        <h3 className="text-xl font-bold text-white mb-6">Security</h3>
-                        <div className="space-y-4">
-                            <button className="w-full flex items-center justify-between p-4 bg-slate-800/50 hover:bg-slate-800 border border-slate-700 rounded-xl transition group">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center">
-                                        <Shield size={24} className="text-white" />
+                                {/* Balance */}
+                                <div className="flex items-center justify-between py-4">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-9 h-9 bg-slate-800 rounded-xl flex items-center justify-center">
+                                            <DollarSign size={16} className="text-emerald-400" />
+                                        </div>
+                                        <span className="text-sm text-slate-300">Account Balance</span>
                                     </div>
-                                    <div className="text-left">
-                                        <p className="text-white font-semibold group-hover:text-emerald-400 transition">Change Password</p>
-                                        <p className="text-slate-400 text-sm">Update your account password</p>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-sm text-slate-400 font-medium">{formatCurrency(user?.balance ?? 0)}</span>
+                                        <ChevronRight size={16} className="text-slate-600" />
                                     </div>
                                 </div>
-                                <div className="text-slate-400 group-hover:text-emerald-400 transition">→</div>
-                            </button>
+
+                                {/* Verification */}
+                                <div className="flex items-center justify-between py-4">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-9 h-9 bg-slate-800 rounded-xl flex items-center justify-center">
+                                            <Shield size={16} className="text-emerald-400" />
+                                        </div>
+                                        <span className="text-sm text-slate-300">Verification Status</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${user?.isVerified === true
+                                            ? 'bg-emerald-500/20 text-emerald-400'
+                                            : 'bg-amber-500/20 text-amber-400'
+                                            }`}>
+                                            {user?.isVerified === true ? 'Verified' : 'Unverified'}
+                                        </span>
+                                        <ChevronRight size={16} className="text-slate-600" />
+                                    </div>
+                                </div>
+
+                                {/* Member Since */}
+                                <div className="flex items-center justify-between py-4">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-9 h-9 bg-slate-800 rounded-xl flex items-center justify-center">
+                                            <Calendar size={16} className="text-emerald-400" />
+                                        </div>
+                                        <span className="text-sm text-slate-300">Member Since</span>
+                                    </div>
+                                    <span className="text-sm text-slate-400">{formatDate(user?.createdAt)}</span>
+                                </div>
+
+                            </div>
+
+                            {!isEditing && (
+                                <button
+                                    onClick={() => setIsEditing(true)}
+                                    className="mt-6 w-full py-3.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white text-sm font-semibold rounded-2xl flex items-center justify-center gap-2 transition"
+                                >
+                                    <Edit2 size={16} />
+                                    Edit Profile
+                                </button>
+                            )}
                         </div>
-                    </div>
+                    )}
+
+                    {/* Security Tab */}
+                    {activeTab === 'security' && (
+                        <div className="mt-1 divide-y divide-slate-800">
+
+                            {/* Row */}
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    (document.activeElement as HTMLElement)?.blur();
+                                    setShowPasswordForm(!showPasswordForm);
+                                    setPasswordError('');
+                                    setPasswordSuccess(false);
+                                    setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+                                }}
+                                className="w-full flex items-center justify-between py-4 group"
+                            >
+                                <div className="flex items-center gap-3">
+                                    <div className="w-9 h-9 bg-slate-800 rounded-xl flex items-center justify-center">
+                                        <Shield size={16} className="text-emerald-400" />
+                                    </div>
+                                    <div className="text-left">
+                                        <p className="text-sm font-medium text-white group-hover:text-emerald-400 transition">Change Password</p>
+                                        <p className="text-xs text-slate-500">Update your account password</p>
+                                    </div>
+                                </div>
+                                <ChevronRight
+                                    size={16}
+                                    className={`text-slate-600 group-hover:text-emerald-400 transition-transform duration-200 ${showPasswordForm ? 'rotate-90' : ''}`}
+                                />
+                            </button>
+
+                            {/* Form */}
+                            {showPasswordForm && (
+                                <div className="py-4 space-y-4">
+
+                                    {/* Current Password */}
+                                    <div>
+                                        <label className="block text-xs text-slate-400 mb-1.5">Current Password</label>
+                                        <div className="relative">
+                                            <input type="text" name="fake-username" style={{ display: 'none' }} />
+                                            <input
+                                                type={showPasswords.current ? 'text' : 'password'}
+                                                value={passwordForm.currentPassword}
+                                                autoComplete="new-password"
+                                                onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
+                                                placeholder="Enter current password"
+                                                className="w-full px-4 py-2.5 pr-10 bg-slate-800 border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-emerald-500 transition placeholder:text-slate-600"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowPasswords({ ...showPasswords, current: !showPasswords.current })}
+                                                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition"
+                                            >
+                                                {showPasswords.current ? <EyeOff size={16} /> : <Eye size={16} />}
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* New Password */}
+                                    <div>
+                                        <label className="block text-xs text-slate-400 mb-1.5">New Password</label>
+                                        <div className="relative">
+                                            <input
+                                                type={showPasswords.new ? 'text' : 'password'}
+                                                value={passwordForm.newPassword}
+                                                onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
+                                                placeholder="Enter new password"
+                                                className="w-full px-4 py-2.5 pr-10 bg-slate-800 border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-emerald-500 transition placeholder:text-slate-600"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowPasswords({ ...showPasswords, new: !showPasswords.new })}
+                                                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition"
+                                            >
+                                                {showPasswords.new ? <EyeOff size={16} /> : <Eye size={16} />}
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* Confirm Password */}
+                                    <div>
+                                        <label className="block text-xs text-slate-400 mb-1.5">Confirm New Password</label>
+                                        <div className="relative">
+                                            <input
+                                                type={showPasswords.confirm ? 'text' : 'password'}
+                                                value={passwordForm.confirmPassword}
+                                                onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
+                                                placeholder="Confirm new password"
+                                                className="w-full px-4 py-2.5 pr-10 bg-slate-800 border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-emerald-500 transition placeholder:text-slate-600"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowPasswords({ ...showPasswords, confirm: !showPasswords.confirm })}
+                                                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition"
+                                            >
+                                                {showPasswords.confirm ? <EyeOff size={16} /> : <Eye size={16} />}
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* Error */}
+                                    {passwordError !== '' && (
+                                        <p className="text-xs text-red-400 flex items-center gap-1.5">
+                                            <X size={13} /> {passwordError}
+                                        </p>
+                                    )}
+
+                                    {/* Success */}
+                                    {passwordSuccess && (
+                                        <p className="text-xs text-emerald-400 flex items-center gap-1.5">
+                                            <Shield size={13} /> Password updated successfully.
+                                        </p>
+                                    )}
+
+                                    {/* Actions */}
+                                    <div className="flex gap-2 pt-1">
+                                        <button
+                                            onClick={() => { setShowPasswordForm(false); setPasswordError(''); setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' }); }}
+                                            className="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-sm font-medium rounded-xl flex items-center justify-center gap-2 transition"
+                                        >
+                                            <X size={15} /> Cancel
+                                        </button>
+                                        <button
+                                            onClick={() => void handleChangePassword()}
+                                            disabled={isChangingPassword}
+                                            className="flex-1 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold rounded-xl flex items-center justify-center gap-2 transition disabled:opacity-50"
+                                        >
+                                            <Save size={15} /> {isChangingPassword ? 'Updating…' : 'Update'}
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
                 </div>
             </main>
         </div>
