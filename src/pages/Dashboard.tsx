@@ -257,7 +257,7 @@ function MarketSnapshot() {
         try {
             // Fetch S&P 500 (SPY), NASDAQ (QQQ), DOW (DIA) from your backend
             const token = localStorage.getItem('token');
-            const headers = token ? { Authorization: `Bearer ${token}` } : {};
+            const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
 
             const [stocksRes, btcRes] = await Promise.all([
                 fetch(`${API_BASE_URL}/stocks/quotes?symbols=SPY,QQQ,DIA`, { headers }).catch(() => null),

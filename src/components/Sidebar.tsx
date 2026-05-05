@@ -1,7 +1,7 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
     LogOut, Activity, DollarSign, TrendingUp,
-    X, ChevronRight, Wallet, ArrowLeftRight, Shield, User
+    X, ChevronRight, Wallet, ArrowLeftRight, User
 } from 'lucide-react';
 import { useApp } from '../contexts/AppContext';
 
