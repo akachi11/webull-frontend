@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { API_BASE_URL } from '../utils';
+import { useApp } from '../contexts/AppContext';
 
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
@@ -12,6 +13,7 @@ export default function SignIn() {
     const [touched, setTouched] = useState<Record<string, boolean>>({});
     const [isLoading, setIsLoading] = useState(false);
     const [rememberMe, setRememberMe] = useState(false);
+    const { setUser } = useApp()
 
     const validateField = (name: string, value: string): string | undefined => {
         switch (name) {
@@ -76,6 +78,7 @@ export default function SignIn() {
             // Store token
             localStorage.setItem('token', data.token);
             localStorage.setItem('user', JSON.stringify(data.user));
+            setUser(data.user);
 
             navigate('/dashboard');
         } catch (error) {

@@ -33,10 +33,7 @@ export default function AllStocks() {
     const [popularStocksLoading, setPopularStocksLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
 
-    console.log(setSearchQuery)
-
     useEffect(() => {
-        // Get stocks from localStorage (passed from Dashboard)
         const storedStocks = localStorage.getItem('allStocks');
         if (storedStocks) {
             setAllStocks(JSON.parse(storedStocks));

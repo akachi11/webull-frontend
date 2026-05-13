@@ -9,6 +9,12 @@ import Navbar from '../components/Navbar';
 import PopularStocks from '../components/PopularStocks';
 import { API_BASE_URL } from '../utils';
 
+const ENTERTAINMENT_SYMBOLS = new Set([
+    'WBD', 'NFLX', 'PARA', 'PARAA', 'DIS', 'AMZN', 'AAPL', 'GOOGL',
+    'CMCSA', 'FOX', 'FOXA', 'SONY', 'LGF', 'LGFA', 'LGFB', 'AMC',
+    'CNK', 'IMAX', 'ROKU', 'SPOT', 'SIRI', 'WMG', 'MSGE', 'MSGN',
+]);
+
 interface Stock {
     symbol: string;
     name: string;
@@ -61,14 +67,14 @@ function NewsCard() {
     const [paused, setPaused] = useState(false);
 
     const fallback: NewsItem[] = [
-        { headline: 'S&P 500 edges higher as tech earnings beat expectations', summary: 'Major indices climbed as several large-cap technology companies posted quarterly results that surpassed analyst forecasts, boosting investor confidence across the broader market.', source: 'Reuters', tag: 'Markets', url: 'https://www.reuters.com/markets/', readTime: '2 min read', publishedAt: '14 min ago' },
-        { headline: 'Federal Reserve signals rate hold as inflation data cools', summary: 'Fed officials indicated they are content to leave borrowing costs unchanged after the latest CPI print came in below expectations, suggesting the tightening cycle may be nearing its end.', source: 'Bloomberg', tag: 'Fed', url: 'https://www.bloomberg.com/economics', readTime: '3 min read', publishedAt: '38 min ago' },
-        { headline: 'Apple reports record services revenue in Q2 earnings', summary: 'The iPhone maker beat Wall Street estimates on both revenue and earnings per share, driven by a surge in App Store and subscription income that offset a modest decline in hardware sales.', source: 'CNBC', tag: 'Stocks', url: 'https://www.cnbc.com/technology/', readTime: '2 min read', publishedAt: '1 hr ago' },
-        { headline: 'Bitcoin surges past $65,000 on ETF inflow momentum', summary: 'The flagship cryptocurrency extended its rally as spot Bitcoin ETFs continued to attract fresh capital, with cumulative inflows crossing $15 billion since launch earlier this year.', source: 'CoinDesk', tag: 'Crypto', url: 'https://www.coindesk.com', readTime: '2 min read', publishedAt: '2 hr ago' },
-        { headline: 'Oil prices dip as OPEC output concerns ease', summary: 'Crude futures pulled back after reports emerged that key OPEC+ members are unlikely to extend production cuts beyond the current agreement, raising expectations of higher supply in Q3.', source: 'Financial Times', tag: 'Economy', url: 'https://www.ft.com/markets', readTime: '2 min read', publishedAt: '3 hr ago' },
-        { headline: 'Nvidia extends rally after data center demand outlook raised', summary: 'Shares in the chip giant hit a fresh all-time high after management reiterated strong forward guidance for AI infrastructure spending, with hyperscalers ramping GPU orders significantly.', source: 'WSJ', tag: 'Stocks', url: 'https://www.wsj.com/market-data', readTime: '3 min read', publishedAt: '4 hr ago' },
-        { headline: 'Jobs report surprises to the upside with 250K new positions', summary: 'Non-farm payrolls for the month exceeded consensus estimates by a wide margin, with gains broad-based across services, healthcare, and construction sectors, keeping unemployment at multi-decade lows.', source: 'Reuters', tag: 'Economy', url: 'https://www.reuters.com/markets/', readTime: '2 min read', publishedAt: '5 hr ago' },
-        { headline: 'Tesla deliveries miss estimates; shares slide in premarket', summary: 'The EV maker reported quarterly delivery numbers that fell short of analyst projections, citing production disruptions at its Berlin factory and softer demand in the Chinese market.', source: 'CNBC', tag: 'Stocks', url: 'https://www.cnbc.com/technology/', readTime: '2 min read', publishedAt: '6 hr ago' },
+        { headline: 'Warner Bros. Discovery reports streaming subscriber growth in Q2', summary: 'WBD posted stronger-than-expected subscriber additions for its Max streaming platform, helping offset continued weakness in its linear TV segment as cord-cutting accelerates across the industry.', source: 'Reuters', tag: 'Streaming', url: 'https://www.reuters.com/markets/', readTime: '2 min read', publishedAt: '14 min ago' },
+        { headline: 'Netflix beats earnings estimates on ad-supported tier momentum', summary: 'The streaming giant surpassed Wall Street forecasts driven by rapid growth in its lower-cost advertising tier, which has become a significant revenue contributor ahead of analyst projections.', source: 'Bloomberg', tag: 'Streaming', url: 'https://www.bloomberg.com/technology', readTime: '3 min read', publishedAt: '38 min ago' },
+        { headline: 'Disney+ and Hulu bundle drives Disney subscriber rebound', summary: "Disney reported a recovery in streaming subscribers after bundling Disney+ with Hulu at a discounted rate, while its theme park division continued to post record revenue driven by international expansion.", source: 'CNBC', tag: 'Studios', url: 'https://www.cnbc.com/technology/', readTime: '2 min read', publishedAt: '1 hr ago' },
+        { headline: 'Paramount Global in advanced merger talks with Skydance Media', summary: 'Paramount confirmed it is in exclusive negotiations with Skydance Media over a potential deal that would reshape the storied studio, with Shari Redstone set to relinquish majority control of the company.', source: 'WSJ', tag: 'Studios', url: 'https://www.wsj.com/market-data', readTime: '2 min read', publishedAt: '2 hr ago' },
+        { headline: 'Comcast explores spinning off cable TV networks into separate company', summary: 'Comcast disclosed it is evaluating a separation of its NBCUniversal cable channels, including MSNBC and CNBC, into a standalone entity as the media conglomerate looks to adapt to structural changes in the TV business.', source: 'Financial Times', tag: 'Media', url: 'https://www.ft.com/markets', readTime: '2 min read', publishedAt: '3 hr ago' },
+        { headline: 'Spotify surpasses 250 million paid subscribers globally', summary: 'The music streaming leader reported record paid subscriber additions for the quarter, crediting its aggressive expansion into audiobooks and podcast exclusives for driving user upgrades from the free tier.', source: 'Bloomberg', tag: 'Music', url: 'https://www.bloomberg.com/technology', readTime: '3 min read', publishedAt: '4 hr ago' },
+        { headline: 'AMC Networks sells stake in independent film unit to cut debt', summary: 'AMC Networks announced the sale of a minority interest in its IFC Films label to a private equity consortium, using the proceeds to pay down debt as the company accelerates its pivot toward streaming distribution.', source: 'Variety', tag: 'Cinema', url: 'https://variety.com', readTime: '2 min read', publishedAt: '5 hr ago' },
+        { headline: 'Roku posts first profitable quarter on advertising recovery', summary: 'Roku reported its first GAAP-profitable quarter as connected TV advertising spending rebounded sharply, with the platform benefiting from brand advertisers shifting budgets away from traditional broadcast television.', source: 'CNBC', tag: 'Streaming', url: 'https://www.cnbc.com/technology/', readTime: '2 min read', publishedAt: '6 hr ago' },
     ];
 
     useEffect(() => {
@@ -81,14 +87,14 @@ function NewsCard() {
                 tools: [{ type: 'web_search_20250305', name: 'web_search' }],
                 messages: [{
                     role: 'user',
-                    content: `Search for the latest 8 financial market news stories right now.
+                    content: `Search for the latest 8 financial news stories about entertainment and media industry stocks right now. Focus on companies like Warner Bros Discovery (WBD), Netflix (NFLX), Disney (DIS), Paramount (PARA), Comcast (CMCSA), Amazon (AMZN), Apple (AAPL), Roku (ROKU), Spotify (SPOT), Sony (SONY), AMC, IMAX, and similar entertainment/streaming/media companies.
 Return ONLY a raw JSON array — no markdown, no backticks, no explanation.
 Each element must have exactly these keys:
 {
   "headline": "concise news headline",
   "summary": "2-3 sentence summary of the story with key facts and context",
   "source": "publication name",
-  "tag": "one of: Markets | Stocks | Economy | Crypto | Fed",
+  "tag": "one of: Streaming | Studios | Media | Music | Cinema",
   "url": "direct link to the article",
   "readTime": "X min read",
   "publishedAt": "relative time like 5 min ago or 2 hr ago"
@@ -133,15 +139,15 @@ Each element must have exactly these keys:
     const next = () => goTo((index + 1) % items.length);
 
     const TAG_STYLES: Record<string, { pill: string; dot: string }> = {
-        Markets: { pill: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30', dot: 'bg-emerald-500' },
-        Stocks: { pill: 'bg-blue-500/20 text-blue-400 border-blue-500/30', dot: 'bg-blue-500' },
-        Economy: { pill: 'bg-amber-500/20 text-amber-400 border-amber-500/30', dot: 'bg-amber-500' },
-        Crypto: { pill: 'bg-violet-500/20 text-violet-400 border-violet-500/30', dot: 'bg-violet-500' },
-        Fed: { pill: 'bg-red-500/20 text-red-400 border-red-500/30', dot: 'bg-red-500' },
+        Streaming: { pill: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30', dot: 'bg-emerald-500' },
+        Studios: { pill: 'bg-blue-500/20 text-blue-400 border-blue-500/30', dot: 'bg-blue-500' },
+        Media: { pill: 'bg-amber-500/20 text-amber-400 border-amber-500/30', dot: 'bg-amber-500' },
+        Music: { pill: 'bg-violet-500/20 text-violet-400 border-violet-500/30', dot: 'bg-violet-500' },
+        Cinema: { pill: 'bg-red-500/20 text-red-400 border-red-500/30', dot: 'bg-red-500' },
     };
 
     const current = items[index];
-    const tagStyle = current ? (TAG_STYLES[current.tag] ?? TAG_STYLES['Markets']) : TAG_STYLES['Markets'];
+    const tagStyle = current ? (TAG_STYLES[current.tag] ?? TAG_STYLES['Streaming']) : TAG_STYLES['Streaming'];
 
     if (loading) {
         return (
@@ -175,7 +181,7 @@ Each element must have exactly these keys:
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                         <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
                     </span>
-                    <span className="text-white font-semibold text-sm">Market News</span>
+                    <span className="text-white font-semibold text-sm">Entertainment News</span>
                     <span className="text-slate-600 text-xs">·</span>
                     <span className="text-slate-500 text-xs">{index + 1} of {items.length}</span>
                 </div>
@@ -228,7 +234,7 @@ Each element must have exactly these keys:
                 </div>
                 <div className="flex items-center gap-1">
                     {items.map((item, i) => {
-                        const s = TAG_STYLES[item.tag] ?? TAG_STYLES['Markets'];
+                        const s = TAG_STYLES[item.tag] ?? TAG_STYLES['Streaming'];
                         return (
                             <button
                                 key={i}
@@ -255,7 +261,6 @@ function MarketSnapshot() {
 
     const fetchMarketData = useCallback(async () => {
         try {
-            // Fetch S&P 500 (SPY), NASDAQ (QQQ), DOW (DIA) from your backend
             const token = localStorage.getItem('token');
             const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
 
@@ -268,7 +273,6 @@ function MarketSnapshot() {
 
             if (stocksRes?.ok) {
                 const data = await stocksRes.json();
-                // Support both { quotes: [] } and flat []
                 const quotes: { symbol: string; price: number; changePercent: number }[] =
                     Array.isArray(data) ? data : (data.quotes ?? data.stocks ?? []);
 
@@ -403,6 +407,7 @@ export default function Dashboard() {
 
             const data = await response.json();
             setPortfolio(data.stocks || []);
+            localStorage.setItem('allStocks', JSON.stringify(data.stocks))
             setCash(data.cash || 0);
 
             if (data.summary) {
@@ -428,7 +433,8 @@ export default function Dashboard() {
         setPopularStocksLoading(true);
         try {
             const res = await axios.get(`${API_BASE_URL}/stocks/popular`);
-            setPopularStocks((res.data.stocks as Stock[]) || []);
+            const all = (res.data.stocks as Stock[]) || [];
+            setPopularStocks(all.filter(s => ENTERTAINMENT_SYMBOLS.has(s.symbol)));
         } catch { setPopularStocks([]); }
         finally { setPopularStocksLoading(false); }
     };
@@ -460,6 +466,8 @@ export default function Dashboard() {
         { icon: <Zap size={18} className="text-emerald-400" />, label: 'Instant Execution', sub: 'Avg. fill time < 50ms' },
         { icon: <Globe size={18} className="text-emerald-400" />, label: '180+ Markets', sub: 'Global trading access' },
     ];
+
+    const entertainmentPortfolio = portfolio.filter(s => ENTERTAINMENT_SYMBOLS.has(s.symbol));
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
@@ -567,9 +575,9 @@ export default function Dashboard() {
                             <div className="bg-slate-900/80 backdrop-blur-sm border border-slate-800 rounded-2xl p-6">
                                 <div className="flex items-center justify-between mb-6">
                                     <h3 className="text-xl font-bold text-white">My Stocks</h3>
-                                    {portfolio.length > 5 && (
+                                    {entertainmentPortfolio.length > 5 && (
                                         <button
-                                            onClick={() => { localStorage.setItem('allStocks', JSON.stringify(portfolio)); navigate('/stocks'); }}
+                                            onClick={() => { localStorage.setItem('allStocks', JSON.stringify(entertainmentPortfolio)); navigate('/stocks'); }}
                                             className="text-emerald-500 hover:text-emerald-400 text-sm font-medium transition"
                                         >
                                             See All →
@@ -592,17 +600,17 @@ export default function Dashboard() {
                                             </div>
                                         ))}
                                     </div>
-                                ) : portfolio.length === 0 ? (
+                                ) : entertainmentPortfolio.length === 0 ? (
                                     <div className="text-center py-12">
                                         <Activity className="mx-auto text-slate-600 mb-4" size={48} />
-                                        <p className="text-slate-400 mb-4">No stocks in your portfolio yet</p>
-                                        <button onClick={() => handleStockClick('AAPL')} className="px-6 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-lg transition">
+                                        <p className="text-slate-400 mb-4">No entertainment stocks in your portfolio yet</p>
+                                        <button onClick={() => handleStockClick('WBD')} className="px-6 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-lg transition">
                                             Start Trading
                                         </button>
                                     </div>
                                 ) : (
                                     <div className="space-y-3">
-                                        {portfolio.slice(0, 5).map(stock => (
+                                        {entertainmentPortfolio.slice(0, 5).map(stock => (
                                             <button
                                                 key={stock.symbol}
                                                 onClick={() => handleStockClick(stock.symbol)}
